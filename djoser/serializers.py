@@ -10,12 +10,17 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = tuple(User.REQUIRED_FIELDS) + (
-            User._meta.pk.name,
-            User.USERNAME_FIELD,
+        fields = (
+            'id',
+            'username',
+            'email',
+            'first_name',
+            'last_name'
         )
         read_only_fields = (
-            User.USERNAME_FIELD,
+            'id',
+            'username',
+            'email',
         )
 
 
@@ -24,14 +29,17 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = tuple(User.REQUIRED_FIELDS) + (
-            User.USERNAME_FIELD,
-            User._meta.pk.name,
+        fields = (
+            'username',
+            'email',
+            'first_name',
+            'last_name',
             'password',
         )
 
     def create(self, validated_data):
-        return User.objects.create_user(**validated_data)
+        user = User.objects.create_user(**validated_data)
+        return user
 
 
 class LoginSerializer(serializers.Serializer):
