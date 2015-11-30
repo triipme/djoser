@@ -6,7 +6,27 @@ from . import constants, utils
 User = get_user_model()
 
 
-class UserSerializer(serializers.ModelSerializer):
+class BaseSerializer(serializers.ModelSerializer):
+    """
+    Custom serializer that reformats validation errors.
+    """
+
+    def is_valid(self, raise_exception=False):
+        """
+        Catches validation errors and tries to reformat them.
+        """
+        try:
+            return super(BaseSerializer, self).is_valid(raise_exception)
+        except serializers.ValidationError as e:
+            try:
+                # We try to only get the first error
+                error_message = e.detail.values()[0][0]
+            except:
+                error_message = "Something went wrong"
+
+            raise serializers.ValidationError({'error': error_message})
+
+class UserSerializer(BaseSerializer):
 
     class Meta:
         model = User
@@ -24,7 +44,7 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
 
-class UserRegistrationSerializer(serializers.ModelSerializer):
+class UserRegistrationSerializer(BaseSerializer):
     password = serializers.CharField(style={'input_type': 'password'}, write_only=True)
 
     class Meta:
@@ -141,7 +161,7 @@ class PasswordResetConfirmRetypeSerializer(UidAndTokenSerializer, PasswordRetype
     pass
 
 
-class SetUsernameSerializer(serializers.ModelSerializer, CurrentPasswordSerializer):
+class SetUsernameSerializer(BaseSerializer, CurrentPasswordSerializer):
 
     class Meta(object):
         model = User
@@ -173,7 +193,7 @@ class SetUsernameRetypeSerializer(SetUsernameSerializer):
         return attrs
 
 
-class TokenSerializer(serializers.ModelSerializer):
+class TokenSerializer(BaseSerializer):
     auth_token = serializers.CharField(source='key')
 
     class Meta:
